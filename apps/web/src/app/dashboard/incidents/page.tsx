@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useIncidents } from '@/hooks';
 
 export default function IncidentsPage() {
@@ -199,9 +200,9 @@ export default function IncidentsPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                    <Link href={`/dashboard/incidents/${incident.id}`} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                       View
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))

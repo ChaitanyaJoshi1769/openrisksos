@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRisks } from '@/hooks';
 
 export default function RisksPage() {
@@ -218,9 +219,9 @@ export default function RisksPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                    <Link href={`/dashboard/risks/${risk.id}`} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                       View
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))
