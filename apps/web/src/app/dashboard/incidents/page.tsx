@@ -70,9 +70,9 @@ export default function IncidentsPage() {
             Track and manage security incidents
           </p>
         </div>
-        <button className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+        <Link href="/dashboard/incidents/new" className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-block">
           + Report Incident
-        </button>
+        </Link>
       </div>
 
       {/* Stats */}

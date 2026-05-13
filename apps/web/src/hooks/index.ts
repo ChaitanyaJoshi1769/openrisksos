@@ -5,13 +5,16 @@ export { useCreateRisk } from './useCreateRisk';
 export { useUpdateRisk } from './useUpdateRisk';
 export { useIncidents } from './useIncidents';
 export { useIncidentDetail } from './useIncidentDetail';
+export { useCreateIncident } from './useCreateIncident';
 export { useUpdateIncident } from './useUpdateIncident';
 export { useCompliance } from './useCompliance';
 export { useAudits } from './useAudits';
 export { useAuditDetail } from './useAuditDetail';
+export { useCreateAudit } from './useCreateAudit';
 export { useUpdateAudit } from './useUpdateAudit';
 export { useVendors } from './useVendors';
 export { useVendorDetail } from './useVendorDetail';
+export { useCreateVendor } from './useCreateVendor';
 export { useUpdateVendor } from './useUpdateVendor';
 
 // Export types

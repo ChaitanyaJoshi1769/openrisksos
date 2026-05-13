@@ -98,9 +98,9 @@ export default function VendorsPage() {
             Monitor third-party risk and assessments
           </p>
         </div>
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <Link href="/dashboard/vendors/new" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block">
           + Add Vendor
-        </button>
+        </Link>
       </div>
 
       {/* Stats */}

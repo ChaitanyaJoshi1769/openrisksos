@@ -101,9 +101,9 @@ export default function AuditsPage() {
             Plan, execute, and track audits
           </p>
         </div>
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <Link href="/dashboard/audits/new" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block">
           + Schedule Audit
-        </button>
+        </Link>
       </div>
 
       {/* Stats */}
