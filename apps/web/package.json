@@ -26,7 +26,6 @@
     "@headlessui/react": "^1.7.0",
     "@heroicons/react": "^2.0.0",
     "axios": "^1.6.0",
-    "@openrisksos/api-client": "*",
     "graphql-request": "^6.0.0"
   },
   "devDependencies": {
