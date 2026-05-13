@@ -1,51 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-
-interface Framework {
-  id: string;
-  name: string;
-  type: string;
-  totalControls: number;
-  compliantControls: number;
-  compliancePercentage: number;
-}
+import { useCompliance } from '@/hooks';
 
 export default function CompliancePage() {
-  const [frameworks] = useState<Framework[]>([
-    {
-      id: 'iso27001',
-      name: 'ISO 27001',
-      type: 'Information Security Management',
-      totalControls: 114,
-      compliantControls: 95,
-      compliancePercentage: 83,
-    },
-    {
-      id: 'gdpr',
-      name: 'GDPR',
-      type: 'Data Protection Regulation',
-      totalControls: 42,
-      compliantControls: 39,
-      compliancePercentage: 93,
-    },
-    {
-      id: 'hipaa',
-      name: 'HIPAA',
-      type: 'Healthcare Privacy',
-      totalControls: 87,
-      compliantControls: 68,
-      compliancePercentage: 78,
-    },
-    {
-      id: 'pci-dss',
-      name: 'PCI-DSS',
-      type: 'Payment Card Security',
-      totalControls: 101,
-      compliantControls: 78,
-      compliancePercentage: 77,
-    },
-  ]);
+  const { frameworks, overallScore, loading, error } = useCompliance();
+
+  const calculateFrameworkCompliance = (framework: any) => {
+    if (!framework.controls || framework.controls.length === 0) return 0;
+    const compliant = framework.controls.filter((c: any) => c.status === 'compliant').length;
+    return Math.round((compliant / framework.controls.length) * 100);
+  };
 
   const getComplianceColor = (percentage: number) => {
     if (percentage >= 90) return 'bg-green-600';
@@ -58,6 +22,17 @@ export default function CompliancePage() {
     if (percentage >= 70) return 'text-yellow-700';
     return 'text-red-700';
   };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-medium">Error loading compliance data</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -76,103 +51,125 @@ export default function CompliancePage() {
         <h2 className="text-xl font-bold text-gray-900 mb-6">
           Overall Compliance Status
         </h2>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-gray-600 mb-2">Combined Compliance Score</p>
-            <p className="text-5xl font-bold text-green-600">84%</p>
-            <p className="text-gray-600 text-sm mt-2">
-              Across {frameworks.length} frameworks
-            </p>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
           </div>
-          <div className="w-48 h-48 flex items-center justify-center relative">
-            <svg className="w-full h-full" viewBox="0 0 200 200">
-              <circle
-                cx="100"
-                cy="100"
-                r="90"
-                fill="none"
-                stroke="#e5e7eb"
-                strokeWidth="20"
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r="90"
-                fill="none"
-                stroke="#16a34a"
-                strokeWidth="20"
-                strokeDasharray={`${84 * 5.655}px`}
-                strokeDashoffset="0"
-                strokeLinecap="round"
-                transform="rotate(-90 100 100)"
-              />
-              <text
-                x="100"
-                y="110"
-                fontSize="32"
-                fontWeight="bold"
-                textAnchor="middle"
-                fill="#1f2937"
-              >
-                84%
-              </text>
-            </svg>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 mb-2">Combined Compliance Score</p>
+              <p className="text-5xl font-bold text-green-600">{overallScore}%</p>
+              <p className="text-gray-600 text-sm mt-2">
+                Across {frameworks.length} frameworks
+              </p>
+            </div>
+            <div className="w-48 h-48 flex items-center justify-center relative">
+              <svg className="w-full h-full" viewBox="0 0 200 200">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  strokeWidth="20"
+                />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="90"
+                  fill="none"
+                  stroke="#16a34a"
+                  strokeWidth="20"
+                  strokeDasharray={`${overallScore * 5.655}px`}
+                  strokeDashoffset="0"
+                  strokeLinecap="round"
+                  transform="rotate(-90 100 100)"
+                />
+                <text
+                  x="100"
+                  y="110"
+                  fontSize="32"
+                  fontWeight="bold"
+                  textAnchor="middle"
+                  fill="#1f2937"
+                >
+                  {overallScore}%
+                </text>
+              </svg>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Frameworks Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {frameworks.map((framework) => (
-          <div key={framework.id} className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">{framework.name}</h3>
-                <p className="text-sm text-gray-600">{framework.type}</p>
-              </div>
-              <div
-                className={`text-2xl font-bold ${getComplianceLabelColor(
-                  framework.compliancePercentage
-                )}`}
-              >
-                {framework.compliancePercentage}%
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className={`h-3 rounded-full transition-all ${getComplianceColor(
-                    framework.compliancePercentage
-                  )}`}
-                  style={{ width: `${framework.compliancePercentage}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Controls Info */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-gray-600 mb-1">Compliant Controls</p>
-                <p className="text-lg font-bold text-green-600">
-                  {framework.compliantControls}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-600 mb-1">Total Controls</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {framework.totalControls}
-                </p>
-              </div>
-            </div>
-
-            {/* Action Button */}
-            <button className="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition text-sm font-medium">
-              View Details
-            </button>
+        {loading ? (
+          <div className="col-span-2 flex justify-center py-8">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
           </div>
-        ))}
+        ) : frameworks.length === 0 ? (
+          <div className="col-span-2 text-center py-8 text-gray-600">
+            No frameworks found
+          </div>
+        ) : (
+          frameworks.map((framework) => {
+            const compliancePercentage = calculateFrameworkCompliance(framework);
+            const totalControls = framework.controls?.length || 0;
+            const compliantControls = framework.controls?.filter((c: any) => c.status === 'compliant').length || 0;
+
+            return (
+              <div key={framework.id} className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{framework.name}</h3>
+                    <p className="text-sm text-gray-600">{framework.description || 'Compliance Framework'}</p>
+                  </div>
+                  <div
+                    className={`text-2xl font-bold ${getComplianceLabelColor(
+                      compliancePercentage
+                    )}`}
+                  >
+                    {compliancePercentage}%
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all ${getComplianceColor(
+                        compliancePercentage
+                      )}`}
+                      style={{ width: `${compliancePercentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Controls Info */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Compliant Controls</p>
+                    <p className="text-lg font-bold text-green-600">
+                      {compliantControls}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Total Controls</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {totalControls}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button className="w-full px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition text-sm font-medium">
+                  View Details
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Non-Compliant Controls */}
