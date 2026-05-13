@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useVendors } from '@/hooks';
 
 export default function VendorsPage() {
@@ -249,9 +250,9 @@ export default function VendorsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                    <Link href={`/dashboard/vendors/${vendor.id}`} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                       View
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))

@@ -7,6 +7,7 @@ export { useCompliance } from './useCompliance';
 export { useAudits } from './useAudits';
 export { useAuditDetail } from './useAuditDetail';
 export { useVendors } from './useVendors';
+export { useVendorDetail } from './useVendorDetail';
 
 // Export types
 export type { RisksState } from './useRisks';
