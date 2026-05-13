@@ -3,6 +3,7 @@ import httpProxy from 'http-proxy';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
@@ -10,6 +11,7 @@ dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 const serviceRoutes = {
   risk: process.env.RISK_SERVICE_URL || 'http://localhost:3001',
@@ -101,11 +103,117 @@ const globalLimiter = rateLimit({
 
 app.use(globalLimiter);
 
-// Tenant validation middleware
+// User database (in-memory for MVP, replace with real DB)
+const users: Record<string, { email: string; password: string; tenantId: string }> = {
+  'user@company.com': {
+    email: 'user@company.com',
+    password: 'password123',
+    tenantId: 'tenant-123',
+  },
+};
+
+// Authentication endpoint
+app.post('/api/v1/auth/login', (req: Request, res: Response) => {
+  try {
+    const { email, password, tenantId } = req.body;
+
+    if (!email || !password || !tenantId) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: 'Email, password, and tenantId are required',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const user = users[email];
+
+    if (!user || user.password !== password || user.tenantId !== tenantId) {
+      return res.status(401).json({
+        statusCode: 401,
+        message: 'Invalid credentials',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        email: user.email,
+        tenantId: user.tenantId,
+        iat: Date.now(),
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      statusCode: 200,
+      message: 'Login successful',
+      token,
+      user: {
+        email: user.email,
+        tenantId: user.tenantId,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      statusCode: 500,
+      message: 'Internal server error',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+// Token verification endpoint
+app.post('/api/v1/auth/verify', (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        statusCode: 401,
+        message: 'Missing or invalid authorization header',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const token = authHeader.substring(7);
+
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      res.json({
+        statusCode: 200,
+        message: 'Token is valid',
+        user: {
+          email: decoded.email,
+          tenantId: decoded.tenantId,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      return res.status(401).json({
+        statusCode: 401,
+        message: 'Invalid or expired token',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).json({
+      statusCode: 500,
+      message: 'Internal server error',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+// Tenant validation middleware (skip for auth endpoints)
 app.use((req: Request, res: Response, next: NextFunction) => {
   const tenantId = req.headers['x-tenant-id'] as string;
 
-  if (!tenantId && req.path !== '/health') {
+  if (!tenantId && req.path !== '/health' && !req.path.startsWith('/api/v1/auth')) {
     return res.status(400).json({
       statusCode: 400,
       message: 'X-Tenant-ID header is required',
@@ -167,6 +275,8 @@ app.get('/api/v1/info', (req: Request, res: Response) => {
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     endpoints: {
+      auth_login: 'POST /api/v1/auth/login',
+      auth_verify: 'POST /api/v1/auth/verify',
       risks: '/api/v1/risks',
       compliance: '/api/v1/compliance',
       incidents: '/api/v1/incidents',

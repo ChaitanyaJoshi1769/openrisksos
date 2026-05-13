@@ -35,10 +35,28 @@ export default function LoginPage() {
         throw new Error('Invalid email format');
       }
 
-      // TODO: In production, make actual API call to authenticate
-      // For now, we'll generate a mock token and call the login method
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('authToken', mockToken);
+      // Call authentication API endpoint
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          tenantId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Store the JWT token from the response
+      localStorage.setItem('authToken', data.token);
 
       // Use the UserContext to store user data
       login(email, tenantId);
