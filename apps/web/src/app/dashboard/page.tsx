@@ -1,56 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-interface DashboardStats {
-  totalRisks: number;
-  criticalRisks: number;
-  compliancePercentage: number;
-  openIncidents: number;
-  overdueActions: number;
-}
+import { useRisks, useCompliance, useIncidents } from '@/hooks';
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalRisks: 0,
-    criticalRisks: 0,
-    compliancePercentage: 0,
-    openIncidents: 0,
-    overdueActions: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const { data: risks, loading: risksLoading } = useRisks();
+  const { frameworks, overallScore, loading: complianceLoading } = useCompliance();
+  const { data: incidents, loading: incidentsLoading } = useIncidents();
 
-  useEffect(() => {
-    // Fetch dashboard statistics
-    const fetchStats = async () => {
-      try {
-        const tenantId = localStorage.getItem('tenantId');
-        const token = localStorage.getItem('authToken');
-
-        if (!tenantId || !token) return;
-
-        // Simulated API calls - will integrate with actual endpoints
-        setStats({
-          totalRisks: 47,
-          criticalRisks: 3,
-          compliancePercentage: 79,
-          openIncidents: 5,
-          overdueActions: 2,
-        });
-      } catch (error) {
-        console.error('Failed to fetch statistics:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const loading = risksLoading || complianceLoading || incidentsLoading;
+  const criticalRisks = risks.filter((r: any) => r.inherentScore >= 20).length;
+  const openIncidents = incidents.filter((i: any) => i.status !== 'resolved').length;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-gray-600">Loading dashboard...</p>
+        <div className="text-center">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full mb-2"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -63,10 +30,10 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-gray-600 text-sm font-medium">Total Risks</div>
           <div className="text-4xl font-bold text-gray-900 mt-2">
-            {stats.totalRisks}
+            {risks.length}
           </div>
           <div className="text-red-600 text-xs mt-2">
-            {stats.criticalRisks} Critical
+            {criticalRisks} Critical
           </div>
         </div>
 
@@ -74,12 +41,12 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-gray-600 text-sm font-medium">Compliance</div>
           <div className="text-4xl font-bold text-gray-900 mt-2">
-            {stats.compliancePercentage}%
+            {overallScore}%
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
             <div
               className="bg-green-600 h-2 rounded-full"
-              style={{ width: `${stats.compliancePercentage}%` }}
+              style={{ width: `${overallScore}%` }}
             ></div>
           </div>
         </div>
@@ -88,18 +55,18 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-gray-600 text-sm font-medium">Open Incidents</div>
           <div className="text-4xl font-bold text-gray-900 mt-2">
-            {stats.openIncidents}
+            {openIncidents}
           </div>
           <div className="text-yellow-600 text-xs mt-2">Active</div>
         </div>
 
-        {/* Overdue Actions */}
+        {/* Compliance Frameworks */}
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-gray-600 text-sm font-medium">Overdue Actions</div>
+          <div className="text-gray-600 text-sm font-medium">Frameworks</div>
           <div className="text-4xl font-bold text-gray-900 mt-2">
-            {stats.overdueActions}
+            {frameworks.length}
           </div>
-          <div className="text-red-600 text-xs mt-2">Require attention</div>
+          <div className="text-blue-600 text-xs mt-2">Active</div>
         </div>
 
         {/* Last Updated */}
@@ -140,11 +107,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Incidents</h2>
           <div className="space-y-3">
-            {[
-              { id: 1, title: 'Unauthorized Access Attempt', severity: 'high' },
-              { id: 2, title: 'Suspicious Login Activity', severity: 'medium' },
-              { id: 3, title: 'Data Export Detected', severity: 'high' },
-            ].map((incident) => (
+            {incidents.slice(0, 3).map((incident: any) => (
               <div
                 key={incident.id}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded"
@@ -153,11 +116,15 @@ export default function DashboardPage() {
                   <p className="text-sm font-medium text-gray-900">
                     {incident.title}
                   </p>
-                  <p className="text-xs text-gray-600">2 hours ago</p>
+                  <p className="text-xs text-gray-600">
+                    {incident.createdAt
+                      ? new Date(incident.createdAt).toLocaleDateString()
+                      : 'Recently'}
+                  </p>
                 </div>
                 <span
                   className={`text-xs font-bold px-2 py-1 rounded ${
-                    incident.severity === 'high'
+                    incident.severity === 'critical' || incident.severity === 'high'
                       ? 'bg-red-100 text-red-800'
                       : 'bg-yellow-100 text-yellow-800'
                   }`}
@@ -166,6 +133,9 @@ export default function DashboardPage() {
                 </span>
               </div>
             ))}
+            {incidents.length === 0 && (
+              <p className="text-gray-600 text-center py-4">No recent incidents</p>
+            )}
           </div>
         </div>
       </div>
