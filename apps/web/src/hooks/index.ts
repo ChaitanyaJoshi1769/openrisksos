@@ -4,6 +4,7 @@ export { useRiskDetail } from './useRiskDetail';
 export { useUpdateRisk } from './useUpdateRisk';
 export { useIncidents } from './useIncidents';
 export { useIncidentDetail } from './useIncidentDetail';
+export { useUpdateIncident } from './useUpdateIncident';
 export { useCompliance } from './useCompliance';
 export { useAudits } from './useAudits';
 export { useAuditDetail } from './useAuditDetail';
