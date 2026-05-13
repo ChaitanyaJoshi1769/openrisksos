@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Audit } from '@openrisksos/api-client';
 import { useApiClient } from './useApiClient';
 
@@ -13,35 +13,23 @@ export interface AuditsState {
 
 export function useAudits(): AuditsState {
   const { client } = useApiClient();
-  const [data, setData] = useState<Audit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchAudits = useCallback(async () => {
-    if (!client) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const audits = await client.audit.getAudits();
-      setData(audits);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch audits');
-      setData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [client]);
-
-  useEffect(() => {
-    fetchAudits();
-  }, [fetchAudits]);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['audits'],
+    queryFn: async () => {
+      if (!client) throw new Error('API client not initialized');
+      return await client.audit.getAudits();
+    },
+    enabled: !!client,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchAudits,
+    data: data || [],
+    loading: isLoading,
+    error: error instanceof Error ? error.message : null,
+    refetch: async () => {
+      await refetch();
+    },
   };
 }

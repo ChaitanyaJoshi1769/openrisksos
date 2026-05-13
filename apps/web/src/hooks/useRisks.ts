@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Risk, RiskFilter } from '@openrisksos/api-client';
 import { useApiClient } from './useApiClient';
 
@@ -8,43 +8,28 @@ export interface RisksState {
   data: Risk[];
   loading: boolean;
   error: string | null;
-  refetch: (filter?: RiskFilter) => Promise<void>;
+  refetch: () => Promise<void>;
 }
 
 export function useRisks(initialFilter?: RiskFilter): RisksState {
   const { client } = useApiClient();
-  const [data, setData] = useState<Risk[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchRisks = useCallback(
-    async (filter?: RiskFilter) => {
-      if (!client) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const risks = await client.risk.getRisks(filter || initialFilter);
-        setData(risks);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch risks');
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['risks', initialFilter],
+    queryFn: async () => {
+      if (!client) throw new Error('API client not initialized');
+      return await client.risk.getRisks(initialFilter);
     },
-    [client, initialFilter]
-  );
-
-  useEffect(() => {
-    fetchRisks();
-  }, [fetchRisks]);
+    enabled: !!client,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   return {
-    data,
-    loading,
-    error,
-    refetch: fetchRisks,
+    data: data || [],
+    loading: isLoading,
+    error: error instanceof Error ? error.message : null,
+    refetch: async () => {
+      await refetch();
+    },
   };
 }

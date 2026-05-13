@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ApiClientProvider } from '@/context/ApiClientProvider';
 import { UserProvider } from '@/context/UserContext';
+import { QueryProvider } from '@/context/QueryClientProvider';
 
 export const metadata: Metadata = {
   title: 'OpenRiskOS - Enterprise Risk Management',
@@ -21,10 +22,12 @@ export default function RootLayout({
       <body>
         <UserProvider>
           <ApiClientProvider>
-            <div className="min-h-screen bg-white">
-              {/* TODO: Add navigation/sidebar */}
-              {children}
-            </div>
+            <QueryProvider>
+              <div className="min-h-screen bg-white">
+                {/* TODO: Add navigation/sidebar */}
+                {children}
+              </div>
+            </QueryProvider>
           </ApiClientProvider>
         </UserProvider>
       </body>

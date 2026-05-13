@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ComplianceFramework } from '@openrisksos/api-client';
 import { useApiClient } from './useApiClient';
 
@@ -14,40 +14,33 @@ export interface ComplianceState {
 
 export function useCompliance(): ComplianceState {
   const { client } = useApiClient();
-  const [frameworks, setFrameworks] = useState<ComplianceFramework[]>([]);
-  const [overallScore, setOverallScore] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchCompliance = useCallback(async () => {
-    if (!client) return;
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['compliance'],
+    queryFn: async () => {
+      if (!client) throw new Error('API client not initialized');
 
-    setLoading(true);
-    setError(null);
+      const [frameworks, status] = await Promise.all([
+        client.compliance.getFrameworks(),
+        client.compliance.getComplianceStatus(),
+      ]);
 
-    try {
-      const fwks = await client.compliance.getFrameworks();
-      setFrameworks(fwks);
-
-      const status = await client.compliance.getComplianceStatus();
-      setOverallScore(status.overallScore);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch compliance data');
-      setFrameworks([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [client]);
-
-  useEffect(() => {
-    fetchCompliance();
-  }, [fetchCompliance]);
+      return {
+        frameworks,
+        overallScore: status.overallScore,
+      };
+    },
+    enabled: !!client,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   return {
-    frameworks,
-    overallScore,
-    loading,
-    error,
-    refetch: fetchCompliance,
+    frameworks: data?.frameworks || [],
+    overallScore: data?.overallScore || 0,
+    loading: isLoading,
+    error: error instanceof Error ? error.message : null,
+    refetch: async () => {
+      await refetch();
+    },
   };
 }
