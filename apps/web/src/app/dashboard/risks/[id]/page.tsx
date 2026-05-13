@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRiskDetail } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import { CardSkeleton } from '@/components';
@@ -111,9 +112,9 @@ export default function RiskDetailPage({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition">
+          <Link href={`/dashboard/risks/${risk.id}/edit`} className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition inline-block">
             Edit Risk
-          </button>
+          </Link>
           <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
             Update Status
           </button>
