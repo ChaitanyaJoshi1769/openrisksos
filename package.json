@@ -1,0 +1,55 @@
+{
+  "name": "openrisksos",
+  "version": "0.1.0",
+  "description": "Enterprise-grade, AI-native, open-source GRC platform",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "build:prod": "turbo run build:prod",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "prettier --write .",
+    "clean": "turbo clean && rm -rf node_modules",
+    "db:migrate": "turbo run db:migrate",
+    "db:seed": "turbo run db:seed",
+    "db:studio": "turbo run db:studio",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "k8s:deploy": "helm install openrisksos ./k8s/openrisksos",
+    "k8s:upgrade": "helm upgrade openrisksos ./k8s/openrisksos",
+    "k8s:uninstall": "helm uninstall openrisksos",
+    "docs": "turbo run docs",
+    "docs:serve": "npx http-server ./docs -p 8080",
+    "typecheck": "turbo run typecheck",
+    "workspace:audit": "pnpm audit --recursive"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0",
+    "ts-node": "^10.9.1",
+    "tsup": "^10.9.0",
+    "turbo": "^1.10.16",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*",
+    "sdk/*"
+  ]
+}

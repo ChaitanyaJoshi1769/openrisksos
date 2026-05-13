@@ -1,0 +1,704 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// TENANCY & MULTI-TENANT SUPPORT
+// ============================================================================
+
+model Tenant {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  logo              String?
+  status            String   @default("active") // active, suspended, deleted
+  tier              String   @default("free") // free, pro, enterprise
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  users             User[]
+  risks             Risk[]
+  incidents         Incident[]
+  audits            Audit[]
+  vendors           Vendor[]
+  policies          Policy[]
+  workflows         Workflow[]
+  complianceFrameworks ComplianceFramework[]
+  controls          ComplianceControl[]
+  evidence          Evidence[]
+  dashboards        Dashboard[]
+
+  @@index([slug])
+}
+
+// ============================================================================
+// AUTHENTICATION & USERS
+// ============================================================================
+
+model User {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  email             String   @unique
+  name              String
+  avatar            String?
+  role              String   @default("user") // admin, user, auditor, viewer
+  status            String   @default("active") // active, inactive, deleted
+
+  // Permissions & RBAC
+  permissions       String[] @default([]) // JSON array of permission strings
+  customRoles       String[] @default([]) // JSON array of custom role IDs
+
+  // Account settings
+  emailVerified     Boolean  @default(false)
+  mfaEnabled        Boolean  @default(false)
+  lastLogin         DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  riskOwnerships    Risk[]   @relation("riskOwner")
+  auditPlannings    Audit[]  @relation("auditPlanner")
+  vendorAssignments Vendor[] @relation("vendorManager")
+  workflowInstances WorkflowInstance[] @relation("assignee")
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+// ============================================================================
+// ENTERPRISE RISK MANAGEMENT (ERM)
+// ============================================================================
+
+model Risk {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  title             String
+  description       String?
+  riskCategory      String   // strategic, operational, compliance, financial, cyber, reputational
+  status            String   @default("active") // active, mitigated, closed, on_hold
+
+  // Risk Scoring
+  probability       Int      @default(3) // 1-5
+  inherentImpact    Int      @default(3) // 1-5
+  inherentScore     Int      @default(9) // calculated
+
+  mitigationEffectiveness Int @default(0) // 0-100%
+  residualImpact    Int?
+  residualScore     Int?     // calculated
+
+  // Ownership & Assignment
+  ownerId           String
+  owner             User     @relation("riskOwner", fields: [ownerId], references: [id])
+  businessUnitId    String?
+  businessUnit      String?
+
+  // Dates & Tracking
+  identificationDate DateTime @default(now())
+  targetMitigationDate DateTime?
+  dueDate           DateTime?
+
+  // Additional fields
+  velocity          String?  // increasing, stable, decreasing
+  linkedIncidents   String[] @default([]) // incident IDs
+  linkedControls    String[] @default([]) // control IDs
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  deletedAt         DateTime? // soft delete
+
+  // Relations
+  mitigations       RiskMitigation[]
+  metrics           KRI[]
+
+  @@index([tenantId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([riskCategory])
+  @@index([deletedAt])
+}
+
+model RiskMitigation {
+  id                String   @id @default(cuid())
+  riskId            String
+  risk              Risk     @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String?
+  controlId         String?  // linked control
+  status            String   @default("planned") // planned, in_progress, completed, deferred
+  targetDate        DateTime?
+  completionDate    DateTime?
+  effectiveness     Int      @default(0) // 0-100%
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([riskId])
+}
+
+model KRI {
+  id                String   @id @default(cuid())
+  riskId            String
+  risk              Risk     @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  name              String
+  description       String?
+  unit              String   // percentage, count, days, etc.
+  threshold         Float
+  currentValue      Float?
+  status            String   @default("ok") // ok, warning, critical
+
+  measurementDate   DateTime @default(now())
+  nextMeasurementDate DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([riskId])
+  @@index([status])
+}
+
+// ============================================================================
+// COMPLIANCE MANAGEMENT
+// ============================================================================
+
+model ComplianceFramework {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  name              String   // ISO27001, SOC2, GDPR, NIST, etc.
+  version           String
+  description       String?
+  industry          String?
+
+  status            String   @default("active") // active, archived
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  requirements      ComplianceRequirement[]
+  controls          ComplianceControl[]
+
+  @@index([tenantId])
+  @@index([name])
+}
+
+model ComplianceRequirement {
+  id                String   @id @default(cuid())
+  frameworkId       String
+  framework         ComplianceFramework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+
+  requirementId     String   // e.g., "A.5.1" for ISO27001
+  name              String
+  description       String?
+  guidance          String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  controls          ComplianceControl[]
+
+  @@unique([frameworkId, requirementId])
+  @@index([frameworkId])
+}
+
+model ComplianceControl {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  frameworkId       String?
+  framework         ComplianceFramework? @relation(fields: [frameworkId], references: [id])
+
+  requirementId     String?
+  requirement       ComplianceRequirement? @relation(fields: [requirementId], references: [id])
+
+  controlId         String   // unique per framework
+  name              String
+  description       String?
+
+  status            String   @default("not_assessed") // compliant, non_compliant, in_progress, not_applicable, not_assessed
+
+  owner             String?  // owner ID
+  evidenceRequired  String[] @default([])
+
+  // Linkages
+  linkedRisks       String[] @default([])
+  linkedAssets      String[] @default([])
+  linkedPolicies    String[] @default([])
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  evidence          Evidence[]
+  testResults       ControlTest[]
+
+  @@index([tenantId])
+  @@index([frameworkId])
+  @@index([requirementId])
+  @@index([status])
+}
+
+model Evidence {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  controlId         String
+  control           ComplianceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+
+  documentUrl       String
+  documentName      String
+  documentType      String   // PDF, screenshot, log, audit, etc.
+  fileSize          BigInt?
+  uploadedBy        String
+
+  status            String   @default("pending") // approved, pending, rejected
+  reviewedBy        String?
+  reviewedAt        DateTime?
+
+  expiresAt         DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([controlId])
+  @@index([status])
+}
+
+model ControlTest {
+  id                String   @id @default(cuid())
+  controlId         String
+  control           ComplianceControl @relation(fields: [controlId], references: [id], onDelete: Cascade)
+
+  testDate          DateTime @default(now())
+  status            String   @default("pass") // pass, fail
+  notes             String?
+
+  testedBy          String
+
+  createdAt         DateTime @default(now())
+
+  @@index([controlId])
+  @@index([testDate])
+}
+
+// ============================================================================
+// INCIDENT MANAGEMENT
+// ============================================================================
+
+model Incident {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  title             String
+  description       String?
+  type              String   @default("operational") // operational, cyber, privacy, compliance, safety
+  status            String   @default("reported") // reported, triaging, investigating, contained, recovered, closed
+  severity          String   @default("medium") // critical, high, medium, low
+
+  reportedDate      DateTime @default(now())
+  reportedBy        String
+
+  // Impact Assessment
+  affectedSystems   String[] @default([])
+  affectedUsers     Int      @default(0)
+  dataExposed       Boolean  @default(false)
+  dataExposureType  String?
+  businessImpact    String?
+  estimatedLoss     BigInt?
+
+  // Investigation
+  rootCause         String?
+  timeline          Timeline[]
+
+  // Resolution
+  containmentDate   DateTime?
+  recoveryDate      DateTime?
+
+  // SLA & Tracking
+  assignee          String?
+  slaCompletionDate DateTime?
+
+  // Linkages
+  linkedRisks       String[] @default([])
+  linkedControls    String[] @default([])
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  capaActions       CorretiveAction[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([severity])
+  @@index([type])
+}
+
+model Timeline {
+  id                String   @id @default(cuid())
+  incidentId        String
+  incident          Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  timestamp         DateTime @default(now())
+  event             String
+  investigator      String
+  evidence          String[] @default([])
+
+  @@index([incidentId])
+  @@index([timestamp])
+}
+
+model CorretiveAction {
+  id                String   @id @default(cuid())
+  incidentId        String
+  incident          Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String?
+  status            String   @default("open") // open, in_progress, completed, deferred
+  owner             String
+  targetDate        DateTime?
+  completionDate    DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([incidentId])
+  @@index([status])
+}
+
+// ============================================================================
+// THIRD-PARTY / VENDOR RISK MANAGEMENT
+// ============================================================================
+
+model Vendor {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  name              String
+  type              String   // Cloud, SaaS, Professional Services, Hardware, Other
+  description       String?
+  website           String?
+
+  businessReason    String?
+  dataClassification String? // Public, Internal, Confidential, Restricted
+
+  // Risk Scoring
+  riskScore         Int      @default(50) // 0-100
+  status            String   @default("active") // active, monitoring, at_risk, deactivated
+
+  // Management
+  manager           String?
+  contractedServices String[] @default([])
+
+  // Assessment
+  assessmentDate    DateTime?
+  nextReassessmentDate DateTime?
+
+  // Breach Tracking
+  breachHistory     BreachRecord[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([riskScore])
+  @@index([status])
+}
+
+model BreachRecord {
+  id                String   @id @default(cuid())
+  vendorId          String
+  vendor            Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String?
+  breachDate        DateTime
+  discoveryDate     DateTime @default(now())
+  severity          String   // critical, high, medium, low
+
+  source            String?  // press, notification, internal
+
+  createdAt         DateTime @default(now())
+
+  @@index([vendorId])
+  @@index([breachDate])
+}
+
+// ============================================================================
+// INTERNAL AUDIT MANAGEMENT
+// ============================================================================
+
+model Audit {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  title             String
+  description       String?
+  type              String   // financial, operational, compliance, it
+  scope             String?
+
+  status            String   @default("planned") // planned, in_progress, completed, draft_report, final_report
+
+  planedStart       DateTime?
+  actualStart       DateTime?
+  plannedEnd        DateTime?
+  actualEnd         DateTime?
+
+  planner           String
+  lead              String?
+
+  // Assessment Area
+  areas             String[] @default([])
+
+  // Results
+  findings          Finding[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model Finding {
+  id                String   @id @default(cuid())
+  auditId           String
+  audit             Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  title             String
+  description       String?
+  category          String   // control_deficiency, design_issue, process_issue
+  severity          String   // critical, high, medium, low
+
+  controlId         String?
+
+  status            String   @default("open") // open, remediation_in_progress, remediated, deferred
+
+  dueDate           DateTime?
+  remediationDate   DateTime?
+  remediationNotes  String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([auditId])
+  @@index([severity])
+  @@index([status])
+}
+
+// ============================================================================
+// POLICY MANAGEMENT
+// ============================================================================
+
+model Policy {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  title             String
+  slug              String
+  description       String?
+  content           String   // policy document
+
+  status            String   @default("draft") // draft, approved, published, archived
+  version           String   @default("1.0")
+
+  owner             String
+  reviewer          String?
+
+  effectiveDate     DateTime?
+  expiryDate        DateTime?
+
+  // Acknowledgement
+  requiresAcknowledgement Boolean @default(true)
+  acknowledgedBy    String[] @default([])
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([status])
+}
+
+// ============================================================================
+// WORKFLOW AUTOMATION
+// ============================================================================
+
+model Workflow {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  name              String
+  description       String?
+
+  // Workflow Definition
+  definition        Json     // workflow schema
+  trigger           String   // event type that triggers workflow
+  status            String   @default("active") // active, inactive, archived
+
+  createdBy         String
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  instances         WorkflowInstance[]
+
+  @@index([tenantId])
+  @@index([status])
+}
+
+model WorkflowInstance {
+  id                String   @id @default(cuid())
+  workflowId        String
+  workflow          Workflow @relation(fields: [workflowId], references: [id])
+
+  status            String   @default("pending") // pending, in_progress, completed, failed
+  context           Json     // workflow context/data
+
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+
+  assignee          String?
+  user              User?    @relation("assignee", fields: [assignee], references: [id])
+
+  steps             WorkflowStep[]
+
+  @@index([workflowId])
+  @@index([status])
+}
+
+model WorkflowStep {
+  id                String   @id @default(cuid())
+  instanceId        String
+  instance          WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  stepName          String
+  status            String   @default("pending") // pending, completed, failed
+
+  startedAt         DateTime?
+  completedAt       DateTime?
+
+  @@index([instanceId])
+}
+
+// ============================================================================
+// DASHBOARDS & REPORTING
+// ============================================================================
+
+model Dashboard {
+  id                String   @id @default(cuid())
+  tenantId          String
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+
+  name              String
+  description       String?
+  slug              String
+
+  layout            Json     // dashboard configuration
+  widgets           String[] @default([]) // widget configurations
+
+  isPublic          Boolean  @default(false)
+  createdBy         String
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+}
+
+// ============================================================================
+// AUDIT LOGGING
+// ============================================================================
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  tenantId          String
+
+  userId            String
+  action            String   // CREATE, READ, UPDATE, DELETE
+  resourceType      String   // Risk, Incident, Audit, etc.
+  resourceId        String?
+
+  changes           Json?    // before/after values
+
+  ipAddress         String?
+  userAgent         String?
+  status            String   @default("success")
+
+  createdAt         DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// INTEGRATION & SYSTEM DATA
+// ============================================================================
+
+model Integration {
+  id                String   @id @default(cuid())
+  tenantId          String
+
+  name              String   // slack, jira, servicenow, etc.
+  type              String   // webhook, polling, realtime
+
+  config            Json     // encrypted configuration
+  status            String   @default("active") // active, inactive, error
+
+  lastSyncAt        DateTime?
+  lastError         String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([name])
+}
+
+// Add indexes for common queries
+model SearchIndex {
+  id                String   @id @default(cuid())
+  tenantId          String
+  documentId        String
+  documentType      String   // risk, incident, control, etc.
+  content           String   // searchable content
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([documentType])
+  @@fulltext([content]) // if using PostgreSQL with pg_trgm
+}

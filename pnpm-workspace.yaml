@@ -1,0 +1,9 @@
+packages:
+  - 'packages/**'
+  - 'services/**'
+  - 'apps/**'
+  - 'sdk/**'
+
+shared-workspace-lockfile: true
+shamefully-hoist: false
+strict-peer-dependencies: false
