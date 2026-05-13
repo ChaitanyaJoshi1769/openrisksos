@@ -1,36 +1,65 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { getAppConfig } from './config/app.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const config = getAppConfig();
+  const logger = new Logger('OpenRiskOS Risk Service');
 
-  // Global validation
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'error', 'warn', config.nodeEnv === 'development' ? 'debug' : 'verbose'],
+  });
+
+  // Global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
 
+  // Global exception filter
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Global interceptors
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
   // Enable CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+    origin: config.corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-API-Key'],
   });
 
-  // Request logging middleware would go here
   // Health check endpoint
-  app.get('/health', () => ({ status: 'ok' }));
+  app.get('/health', () => ({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'risk-service',
+    version: '0.1.0',
+  }));
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
+  // Liveness probe
+  app.get('/healthz', () => ({ ok: true }));
 
-  console.log(`🎯 Risk Service listening on port ${port}`);
+  await app.listen(config.port);
+
+  logger.log(`✅ Risk Service started successfully`);
+  logger.log(`🚀 Listening on port ${config.port}`);
+  logger.log(`📍 Environment: ${config.nodeEnv}`);
+  logger.log(`🔌 GraphQL: http://localhost:${config.port}/graphql`);
+  logger.log(`📚 API Base: http://localhost:${config.port}/api/v1`);
 }
 
 bootstrap().catch((err) => {
-  console.error('Failed to start Risk Service:', err);
+  console.error('❌ Failed to start Risk Service:', err);
   process.exit(1);
 });
