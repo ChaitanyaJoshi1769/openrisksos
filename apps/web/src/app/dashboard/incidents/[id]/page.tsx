@@ -1,13 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useIncidentDetail } from '@/hooks';
+import { useIncidentDetail, useDeleteIncident } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import { CardSkeleton } from '@/components';
 
 export default function IncidentDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { incident, loading, error } = useIncidentDetail(params.id);
+  const { deleteIncidentAsync, isPending: isDeleting } = useDeleteIncident(params.id);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const handleDeleteIncident = async () => {
+    setIsConfirmingDelete(true);
+    try {
+      await deleteIncidentAsync();
+      router.push('/dashboard/incidents');
+    } catch (err) {
+      console.error('Failed to delete incident:', err);
+      setIsConfirmingDelete(false);
+    }
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -273,13 +288,44 @@ export default function IncidentDetailPage({ params }: { params: { id: string } 
               <button className="w-full px-4 py-2 border border-gray-300 text-gray-900 rounded hover:bg-gray-50 text-sm font-medium transition">
                 Add Evidence
               </button>
-              <button className="w-full px-4 py-2 border border-red-300 text-red-900 rounded hover:bg-red-50 text-sm font-medium transition">
-                Close Incident
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full px-4 py-2 border border-red-300 text-red-900 rounded hover:bg-red-50 text-sm font-medium transition"
+              >
+                Delete Incident
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Delete Incident</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this incident? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isConfirmingDelete || isDeleting}
+                className="px-4 py-2 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteIncident}
+                disabled={isConfirmingDelete || isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50"
+              >
+                {isConfirmingDelete || isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

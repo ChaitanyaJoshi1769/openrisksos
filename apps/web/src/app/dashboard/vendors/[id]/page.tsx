@@ -1,13 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useVendorDetail } from '@/hooks';
+import { useVendorDetail, useDeleteVendor } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import { CardSkeleton } from '@/components';
 
 export default function VendorDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { vendor, loading, error } = useVendorDetail(params.id);
+  const { deleteVendorAsync, isPending: isDeleting } = useDeleteVendor(params.id);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  const handleDeleteVendor = async () => {
+    setIsConfirmingDelete(true);
+    try {
+      await deleteVendorAsync();
+      router.push('/dashboard/vendors');
+    } catch (err) {
+      console.error('Failed to delete vendor:', err);
+      setIsConfirmingDelete(false);
+    }
+  };
 
   const getClassificationColor = (classification: string) => {
     switch (classification) {
@@ -283,13 +298,44 @@ export default function VendorDetailPage({ params }: { params: { id: string } })
               <button className="w-full px-4 py-2 border border-gray-300 text-gray-900 rounded hover:bg-gray-50 text-sm font-medium transition">
                 View Breaches
               </button>
-              <button className="w-full px-4 py-2 border border-red-300 text-red-900 rounded hover:bg-red-50 text-sm font-medium transition">
-                Terminate Vendor
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-full px-4 py-2 border border-red-300 text-red-900 rounded hover:bg-red-50 text-sm font-medium transition"
+              >
+                Delete Vendor
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Delete Vendor</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this vendor? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isConfirmingDelete || isDeleting}
+                className="px-4 py-2 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteVendor}
+                disabled={isConfirmingDelete || isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium disabled:opacity-50"
+              >
+                {isConfirmingDelete || isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
