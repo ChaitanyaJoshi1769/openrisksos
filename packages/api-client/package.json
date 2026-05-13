@@ -1,0 +1,55 @@
+{
+  "name": "@openrisksos/api-client",
+  "version": "0.1.0",
+  "description": "TypeScript API client for OpenRiskOS microservices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": false,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./risk": {
+      "import": "./dist/services/risk.js",
+      "require": "./dist/services/risk.js"
+    },
+    "./compliance": {
+      "import": "./dist/services/compliance.js",
+      "require": "./dist/services/compliance.js"
+    },
+    "./incident": {
+      "import": "./dist/services/incident.js",
+      "require": "./dist/services/incident.js"
+    },
+    "./audit": {
+      "import": "./dist/services/audit.js",
+      "require": "./dist/services/audit.js"
+    },
+    "./vendor": {
+      "import": "./dist/services/vendor.js",
+      "require": "./dist/services/vendor.js"
+    }
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
