@@ -1,0 +1,50 @@
+{
+  "name": "@openrisksos/audit-service",
+  "version": "0.1.0",
+  "description": "OpenRiskOS audit-service",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.3.0",
+    "@nestjs/core": "^10.3.0",
+    "@nestjs/graphql": "^12.1.0",
+    "@nestjs/jwt": "^12.0.0",
+    "@nestjs/passport": "^10.0.0",
+    "@nestjs/platform-express": "^10.3.0",
+    "@prisma/client": "^5.7.1",
+    "@openrisksos/database": "*",
+    "apollo-server-express": "^4.10.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "graphql": "^16.8.0",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.3.0",
+    "@nestjs/schematics": "^10.0.0",
+    "@nestjs/testing": "^10.3.0",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "jest": "^29.7.0",
+    "prisma": "^5.7.1",
+    "ts-jest": "^29.1.1",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
+  }
+}
