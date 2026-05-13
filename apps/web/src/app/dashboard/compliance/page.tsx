@@ -52,8 +52,13 @@ export default function CompliancePage() {
           Overall Compliance Status
         </h2>
         {loading ? (
-          <div className="flex justify-center py-8">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+          <div className="flex items-center justify-between py-8">
+            <div className="flex-1">
+              <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded mb-4"></div>
+              <div className="animate-pulse bg-gray-200 h-12 w-1/3 rounded mb-4"></div>
+              <div className="animate-pulse bg-gray-200 h-4 w-1/3 rounded"></div>
+            </div>
+            <div className="w-48 h-48 animate-pulse bg-gray-200 rounded-full"></div>
           </div>
         ) : (
           <div className="flex items-center justify-between">
@@ -105,9 +110,31 @@ export default function CompliancePage() {
       {/* Frameworks Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {loading ? (
-          <div className="col-span-2 flex justify-center py-8">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-          </div>
+          <>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="animate-pulse bg-gray-200 h-5 w-3/4 rounded mb-2"></div>
+                    <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
+                  </div>
+                  <div className="animate-pulse bg-gray-200 h-6 w-12 rounded ml-4"></div>
+                </div>
+                <div className="animate-pulse bg-gray-200 h-3 w-full rounded mb-4"></div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded mb-2"></div>
+                    <div className="animate-pulse bg-gray-200 h-5 w-1/3 rounded"></div>
+                  </div>
+                  <div>
+                    <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded mb-2"></div>
+                    <div className="animate-pulse bg-gray-200 h-5 w-1/3 rounded"></div>
+                  </div>
+                </div>
+                <div className="animate-pulse bg-gray-200 h-10 w-full rounded"></div>
+              </div>
+            ))}
+          </>
         ) : frameworks.length === 0 ? (
           <div className="col-span-2 text-center py-8 text-gray-600">
             No frameworks found

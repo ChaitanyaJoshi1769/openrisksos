@@ -107,128 +107,146 @@ export default function AuditsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Total Audits</p>
-          <p className="text-2xl font-bold text-blue-600 mt-2">
-            {loading ? '—' : audits.length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">In Progress</p>
-          <p className="text-2xl font-bold text-yellow-600 mt-2">
-            {loading ? '—' : audits.filter((a: any) => a.status === 'in_progress').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Open Findings</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {loading ? '—' : findings.filter((f: any) => f.status === 'open').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Avg Closure Time</p>
-          <p className="text-2xl font-bold text-green-600 mt-2">{loading ? '—' : '45 days'}</p>
-        </div>
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                <div className="animate-pulse bg-gray-200 h-8 w-1/3 rounded mt-2"></div>
+              </div>
+            ))
+          : [
+              { label: 'Total Audits', value: audits.length, color: 'text-blue-600' },
+              { label: 'In Progress', value: audits.filter((a: any) => a.status === 'in_progress').length, color: 'text-yellow-600' },
+              { label: 'Open Findings', value: findings.filter((f: any) => f.status === 'open').length, color: 'text-red-600' },
+              { label: 'Avg Closure Time', value: '45 days', color: 'text-green-600' },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <p className="text-gray-600 text-sm">{stat.label}</p>
+                <p className={`text-2xl font-bold ${stat.color} mt-2`}>{stat.value}</p>
+              </div>
+            ))}
       </div>
 
       {/* Audits Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-            <p className="text-gray-600 mt-2">Loading audits...</p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Audit
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Type
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Scheduled Date
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Findings
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Owner
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {loading ? (
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded mb-2"></div>
+                      <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-6 w-16 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-6 w-24 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-1/3 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ) : audits.length === 0 ? (
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Audit
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Scheduled Date
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Findings
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Owner
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Actions
-                </th>
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
+                  No audits found
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y">
-              {audits.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
-                    No audits found
+            ) : (
+              audits.map((audit: any) => (
+                <tr key={audit.id} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-gray-900">{audit.title}</p>
+                    <p className="text-xs text-gray-600">{audit.id}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getAuditTypeColor(
+                        audit.type
+                      )}`}
+                    >
+                      {audit.type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
+                        audit.status
+                      )}`}
+                    >
+                      {audit.status
+                        .split('_')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ')}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {new Date(audit.scheduledDate).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      {audit.criticalFindings > 0 && (
+                        <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">
+                          {audit.criticalFindings}C
+                        </span>
+                      )}
+                      <span className="text-sm font-medium text-gray-900">
+                        {audit.findingsCount}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {audit.owner}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                      View
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                audits.map((audit: any) => (
-              <tr key={audit.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <p className="font-medium text-gray-900">{audit.title}</p>
-                  <p className="text-xs text-gray-600">{audit.id}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getAuditTypeColor(
-                      audit.type
-                    )}`}
-                  >
-                    {audit.type}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
-                      audit.status
-                    )}`}
-                  >
-                    {audit.status
-                      .split('_')
-                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                      .join(' ')}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {new Date(audit.scheduledDate).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    {audit.criticalFindings > 0 && (
-                      <span className="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-bold">
-                        {audit.criticalFindings}C
-                      </span>
-                    )}
-                    <span className="text-sm font-medium text-gray-900">
-                      {audit.findingsCount}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {audit.owner}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                    View
-                  </button>
-                </td>
-              </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Findings Summary */}
@@ -236,45 +254,53 @@ export default function AuditsPage() {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Open Findings</h2>
         <div className="space-y-3">
           {loading ? (
-            <div className="flex justify-center py-4">
-              <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-            </div>
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200">
+                  <div className="flex-1">
+                    <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded mb-2"></div>
+                    <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
+                  </div>
+                  <div className="animate-pulse bg-gray-200 h-6 w-20 rounded ml-4"></div>
+                </div>
+              ))}
+            </>
           ) : findings.length === 0 ? (
             <p className="text-gray-600 text-center py-4">No open findings</p>
           ) : (
             findings
               .filter((f: any) => f.status === 'open' || f.status === 'in_remediation')
               .map((finding: any) => (
-              <div
-                key={finding.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium text-gray-900">{finding.title}</p>
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getSeverityColor(
-                        finding.severity
-                      )}`}
-                    >
-                      {finding.severity.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    Audit {finding.auditId} • Due {new Date(finding.dueDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded text-sm font-medium ${getFindingStatusColor(
-                    finding.status
-                  )}`}
+                <div
+                  key={finding.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition"
                 >
-                  {finding.status
-                    .split('_')
-                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                    .join(' ')}
-                </span>
-              </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-medium text-gray-900">{finding.title}</p>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getSeverityColor(
+                          finding.severity
+                        )}`}
+                      >
+                        {finding.severity.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      Audit {finding.auditId} • Due {new Date(finding.dueDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded text-sm font-medium ${getFindingStatusColor(
+                      finding.status
+                    )}`}
+                  >
+                    {finding.status
+                      .split('_')
+                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                      .join(' ')}
+                  </span>
+                </div>
               ))
           )}
         </div>

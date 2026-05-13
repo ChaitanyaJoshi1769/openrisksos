@@ -76,120 +76,138 @@ export default function IncidentsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Open Incidents</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {incidents.filter((i) => i.status !== 'resolved').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Critical</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {incidents.filter((i) => i.severity === 'critical').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Avg Resolution Time</p>
-          <p className="text-2xl font-bold text-blue-600 mt-2">
-            {incidents.length > 0 ? '4.2 hrs' : '—'}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Total Incidents</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{incidents.length}</p>
-        </div>
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                <div className="animate-pulse bg-gray-200 h-8 w-1/3 rounded mt-2"></div>
+              </div>
+            ))
+          : [
+              { label: 'Open Incidents', value: incidents.filter((i) => i.status !== 'resolved').length, color: 'text-red-600' },
+              { label: 'Critical', value: incidents.filter((i) => i.severity === 'critical').length, color: 'text-red-600' },
+              { label: 'Avg Resolution Time', value: incidents.length > 0 ? '4.2 hrs' : '—', color: 'text-blue-600' },
+              { label: 'Total Incidents', value: incidents.length, color: 'text-gray-900' },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <p className="text-gray-600 text-sm">{stat.label}</p>
+                <p className={`text-2xl font-bold ${stat.color} mt-2`}>{stat.value}</p>
+              </div>
+            ))}
       </div>
 
       {/* Incidents Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-            <p className="text-gray-600 mt-2">Loading incidents...</p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Incident
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Severity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Detected
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Assigned To
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Affected Records
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {incidents.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
-                    No incidents found
-                  </td>
-                </tr>
-              ) : (
-                incidents.map((incident) => (
-                  <tr key={incident.id} className="hover:bg-gray-50 transition">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Incident
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Severity
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Detected
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Assigned To
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Affected Records
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {loading ? (
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900">{incident.title}</p>
-                      <p className="text-xs text-gray-600">{incident.id}</p>
+                      <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded mb-2"></div>
+                      <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
-                          incident.severity
-                        )}`}
-                      >
-                        {incident.severity.toUpperCase()}
-                      </span>
+                      <div className="animate-pulse bg-gray-200 h-6 w-16 rounded"></div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
-                          incident.status
-                        )}`}
-                      >
-                        {incident.status.toUpperCase()}
-                      </span>
+                      <div className="animate-pulse bg-gray-200 h-6 w-16 rounded"></div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {formatDate(incident.createdAt || incident.detectedAt)}
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {incident.assignedTo || '—'}
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-900 font-medium">
-                      {incident.affectedRecords && incident.affectedRecords > 0 ? (
-                        <span className="text-red-600">{incident.affectedRecords}</span>
-                      ) : (
-                        '—'
-                      )}
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-1/3 rounded"></div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                        View
-                      </button>
+                      <div className="animate-pulse bg-gray-200 h-4 w-8 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
+                ))}
+              </>
+            ) : incidents.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
+                  No incidents found
+                </td>
+              </tr>
+            ) : (
+              incidents.map((incident) => (
+                <tr key={incident.id} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-gray-900">{incident.title}</p>
+                    <p className="text-xs text-gray-600">{incident.id}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
+                        incident.severity
+                      )}`}
+                    >
+                      {incident.severity.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
+                        incident.status
+                      )}`}
+                    >
+                      {incident.status.toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    {formatDate(incident.createdAt || incident.detectedAt)}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {incident.assignedTo || '—'}
+                  </td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-900 font-medium">
+                    {incident.affectedRecords && incident.affectedRecords > 0 ? (
+                      <span className="text-red-600">{incident.affectedRecords}</span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Investigation Workflow */}

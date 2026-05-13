@@ -104,143 +104,160 @@ export default function VendorsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Total Vendors</p>
-          <p className="text-2xl font-bold text-blue-600 mt-2">
-            {loading ? '—' : vendors.length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Critical Risk</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {loading ? '—' : vendors.filter((v: any) => v.classification === 'critical').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Under Review</p>
-          <p className="text-2xl font-bold text-yellow-600 mt-2">
-            {loading ? '—' : vendors.filter((v: any) => v.status === 'under_review').length}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Recent Breaches</p>
-          <p className="text-2xl font-bold text-red-600 mt-2">
-            {loading ? '—' : breaches.length}
-          </p>
-        </div>
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                <div className="animate-pulse bg-gray-200 h-8 w-1/3 rounded mt-2"></div>
+              </div>
+            ))
+          : [
+              { label: 'Total Vendors', value: vendors.length, color: 'text-blue-600' },
+              { label: 'Critical Risk', value: vendors.filter((v: any) => v.classification === 'critical').length, color: 'text-red-600' },
+              { label: 'Under Review', value: vendors.filter((v: any) => v.status === 'under_review').length, color: 'text-yellow-600' },
+              { label: 'Recent Breaches', value: breaches.length, color: 'text-red-600' },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <p className="text-gray-600 text-sm">{stat.label}</p>
+                <p className={`text-2xl font-bold ${stat.color} mt-2`}>{stat.value}</p>
+              </div>
+            ))}
       </div>
 
       {/* Vendors Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-            <p className="text-gray-600 mt-2">Loading vendors...</p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Vendor
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Classification
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Status
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Risk Score
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Last Assessment
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Days to Review
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {loading ? (
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded mb-2"></div>
+                      <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-6 w-12 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded mb-2"></div>
+                      <div className="animate-pulse bg-gray-200 h-3 w-1/3 rounded"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </>
+            ) : vendors.length === 0 ? (
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Vendor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Classification
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Risk Score
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Last Assessment
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Days to Review
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Actions
-                </th>
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
+                  No vendors found
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y">
-              {vendors.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
-                    No vendors found
+            ) : (
+              vendors.map((vendor: any) => (
+                <tr key={vendor.id} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-gray-900">{vendor.name}</p>
+                    <p className="text-xs text-gray-600">{vendor.id}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getClassificationColor(
+                        vendor.classification
+                      )}`}
+                    >
+                      {vendor.classification.charAt(0).toUpperCase() +
+                        vendor.classification.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
+                        vendor.status
+                      )}`}
+                    >
+                      {vendor.status
+                        .split('_')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ')}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getRiskScoreColor(
+                        vendor.riskScore
+                      )}`}
+                    >
+                      {vendor.riskScore}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">
+                    <div>
+                      <p className="font-medium">
+                        {new Date(vendor.lastAssessment).toLocaleDateString()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {vendor.assessmentType}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span
+                      className={`text-sm font-bold ${
+                        vendor.daysUntilReview <= 30
+                          ? 'text-red-600'
+                          : 'text-gray-600'
+                      }`}
+                    >
+                      {vendor.daysUntilReview}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                      View
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                vendors.map((vendor: any) => (
-              <tr key={vendor.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <p className="font-medium text-gray-900">{vendor.name}</p>
-                  <p className="text-xs text-gray-600">{vendor.id}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getClassificationColor(
-                      vendor.classification
-                    )}`}
-                  >
-                    {vendor.classification.charAt(0).toUpperCase() +
-                      vendor.classification.slice(1)}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
-                      vendor.status
-                    )}`}
-                  >
-                    {vendor.status
-                      .split('_')
-                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                      .join(' ')}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getRiskScoreColor(
-                      vendor.riskScore
-                    )}`}
-                  >
-                    {vendor.riskScore}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  <div>
-                    <p className="font-medium">
-                      {new Date(vendor.lastAssessment).toLocaleDateString()}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {vendor.assessmentType}
-                    </p>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span
-                    className={`text-sm font-bold ${
-                      vendor.daysUntilReview <= 30
-                        ? 'text-red-600'
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    {vendor.daysUntilReview}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                    View
-                  </button>
-                </td>
-              </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Vendor Breaches */}
@@ -248,43 +265,51 @@ export default function VendorsPage() {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Breaches</h2>
         <div className="space-y-3">
           {loading ? (
-            <div className="flex justify-center py-4">
-              <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-            </div>
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200">
+                  <div className="flex-1">
+                    <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded mb-2"></div>
+                    <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
+                  </div>
+                  <div className="animate-pulse bg-gray-200 h-6 w-20 rounded ml-4"></div>
+                </div>
+              ))}
+            </>
           ) : breaches.length === 0 ? (
             <p className="text-gray-600 text-center py-4">No breaches reported</p>
           ) : (
             breaches.map((breach: any) => (
-            <div
-              key={breach.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="font-medium text-gray-900">{breach.vendorName}</p>
-                  <span
-                    className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getBreachSeverityColor(
-                      breach.severity
-                    )}`}
-                  >
-                    {breach.severity.toUpperCase()}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {breach.impact} • Reported {new Date(breach.reportedDate).toLocaleDateString()}
-                </p>
-              </div>
-              <span
-                className={`px-3 py-1 rounded text-sm font-medium ${getBreachStatusColor(
-                  breach.status
-                )}`}
+              <div
+                key={breach.id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition"
               >
-                {breach.status
-                  .split('_')
-                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(' ')}
-              </span>
-            </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-medium text-gray-900">{breach.vendorName}</p>
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${getBreachSeverityColor(
+                        breach.severity
+                      )}`}
+                    >
+                      {breach.severity.toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {breach.impact} • Reported {new Date(breach.reportedDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <span
+                  className={`px-3 py-1 rounded text-sm font-medium ${getBreachStatusColor(
+                    breach.status
+                  )}`}
+                >
+                  {breach.status
+                    .split('_')
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ')}
+                </span>
+              </div>
             ))
           )}
         </div>

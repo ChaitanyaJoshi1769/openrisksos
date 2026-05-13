@@ -100,106 +100,133 @@ export default function RisksPage() {
 
       {/* Risk Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
-            <p className="text-gray-600 mt-2">Loading risks...</p>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Risk Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                  Owner
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Probability
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Impact
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Inherent Score
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Residual Score
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filteredRisks.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-600">
-                    {searchQuery || statusFilter || severityFilter
-                      ? 'No risks match your filters'
-                      : 'No risks found'}
-                  </td>
-                </tr>
-              ) : (
-                filteredRisks.map((risk) => (
-                  <tr key={risk.id} className="hover:bg-gray-50 transition">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Risk Title
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                Owner
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Probability
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Impact
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Inherent Score
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Residual Score
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Status
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {loading ? (
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-gray-900">{risk.title}</p>
-                        <p className="text-sm text-gray-600">{risk.description}</p>
+                        <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded mb-2"></div>
+                        <div className="animate-pulse bg-gray-200 h-3 w-1/2 rounded"></div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{risk.owner}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-block w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-bold">
-                        {risk.probability}
-                      </span>
+                    <td className="px-6 py-4">
+                      <div className="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-block w-8 h-8 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center text-sm font-bold">
-                        {risk.impact}
-                      </span>
+                      <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full mx-auto"></div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
-                          risk.inherentScore
-                        )}`}
-                      >
-                        {risk.inherentScore}
-                      </span>
+                      <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full mx-auto"></div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-bold">
-                        {risk.residualScore}
-                      </span>
+                      <div className="animate-pulse bg-gray-200 h-6 w-12 rounded mx-auto"></div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span
-                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${
-                          risk.status === 'active'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}
-                      >
-                        {risk.status.charAt(0).toUpperCase() + risk.status.slice(1)}
-                      </span>
+                      <div className="animate-pulse bg-gray-200 h-6 w-12 rounded mx-auto"></div>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                        View
-                      </button>
+                      <div className="animate-pulse bg-gray-200 h-6 w-16 rounded mx-auto"></div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="animate-pulse bg-gray-200 h-4 w-12 rounded mx-auto"></div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        )}
+                ))}
+              </>
+            ) : filteredRisks.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="px-6 py-8 text-center text-gray-600">
+                  {searchQuery || statusFilter || severityFilter
+                    ? 'No risks match your filters'
+                    : 'No risks found'}
+                </td>
+              </tr>
+            ) : (
+              filteredRisks.map((risk) => (
+                <tr key={risk.id} className="hover:bg-gray-50 transition">
+                  <td className="px-6 py-4">
+                    <div>
+                      <p className="font-medium text-gray-900">{risk.title}</p>
+                      <p className="text-sm text-gray-600">{risk.description}</p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{risk.owner}</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-block w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-bold">
+                      {risk.probability}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-block w-8 h-8 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center text-sm font-bold">
+                      {risk.impact}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
+                        risk.inherentScore
+                      )}`}
+                    >
+                      {risk.inherentScore}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-bold">
+                      {risk.residualScore}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span
+                      className={`inline-block px-3 py-1 rounded text-sm font-bold ${
+                        risk.status === 'active'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-green-100 text-green-800'
+                      }`}
+                    >
+                      {risk.status.charAt(0).toUpperCase() + risk.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Summary Stats */}
