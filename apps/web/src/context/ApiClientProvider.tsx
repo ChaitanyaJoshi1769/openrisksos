@@ -9,7 +9,7 @@ interface ApiClientContextType {
   error: string | null;
 }
 
-const ApiClientContext = createContext<ApiClientContextType | undefined>(undefined);
+export const ApiClientContext = createContext<ApiClientContextType | undefined>(undefined);
 
 export function ApiClientProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = React.useState<OpenRiskOSClient | null>(null);

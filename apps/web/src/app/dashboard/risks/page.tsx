@@ -1,66 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-
-interface Risk {
-  id: string;
-  title: string;
-  description: string;
-  probability: number;
-  impact: number;
-  inherentScore: number;
-  residualScore: number;
-  status: string;
-  owner: string;
-}
+import { useRisks } from '@/hooks';
 
 export default function RisksPage() {
-  const [risks] = useState<Risk[]>([
-    {
-      id: 'R001',
-      title: 'Data Breach - Customer Database',
-      description: 'Unauthorized access to customer PII',
-      probability: 3,
-      impact: 5,
-      inherentScore: 15,
-      residualScore: 6,
-      status: 'active',
-      owner: 'CISO',
-    },
-    {
-      id: 'R002',
-      title: 'System Outage - Critical Infrastructure',
-      description: 'Downtime affecting core business operations',
-      probability: 2,
-      impact: 4,
-      inherentScore: 8,
-      residualScore: 4,
-      status: 'active',
-      owner: 'CTO',
-    },
-    {
-      id: 'R003',
-      title: 'Compliance Violation - GDPR',
-      description: 'Non-compliance with data protection regulations',
-      probability: 2,
-      impact: 4,
-      inherentScore: 8,
-      residualScore: 3,
-      status: 'mitigated',
-      owner: 'Compliance Officer',
-    },
-    {
-      id: 'R004',
-      title: 'Insider Threat - Privileged Access Abuse',
-      description: 'Misuse of elevated system privileges',
-      probability: 2,
-      impact: 5,
-      inherentScore: 10,
-      residualScore: 5,
-      status: 'active',
-      owner: 'Security Manager',
-    },
-  ]);
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [severityFilter, setSeverityFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const { data: risks, loading, error, refetch } = useRisks();
 
   const getSeverityColor = (score: number) => {
     if (score >= 20) return 'bg-red-100 text-red-800';
@@ -75,6 +23,33 @@ export default function RisksPage() {
     if (score >= 10) return 'MEDIUM';
     return 'LOW';
   };
+
+  const filteredRisks = risks.filter((risk) => {
+    const matchesStatus = !statusFilter || risk.status === statusFilter;
+    const matchesSeverity = !severityFilter || getSeverityLabel(risk.inherentScore) === severityFilter;
+    const matchesSearch =
+      !searchQuery ||
+      risk.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      risk.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSeverity && matchesSearch;
+  });
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-medium">Error loading risks</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -93,111 +68,138 @@ export default function RisksPage() {
 
       {/* Filters */}
       <div className="flex gap-2">
-        <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm">
-          <option>All Statuses</option>
-          <option>Active</option>
-          <option>Mitigated</option>
-          <option>Closed</option>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="mitigated">Mitigated</option>
+          <option value="closed">Closed</option>
         </select>
-        <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm">
-          <option>All Severities</option>
-          <option>Critical</option>
-          <option>High</option>
-          <option>Medium</option>
-          <option>Low</option>
+        <select
+          value={severityFilter}
+          onChange={(e) => setSeverityFilter(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
+        >
+          <option value="">All Severities</option>
+          <option value="CRITICAL">Critical</option>
+          <option value="HIGH">High</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="LOW">Low</option>
         </select>
         <input
           type="text"
           placeholder="Search risks..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm"
         />
       </div>
 
       {/* Risk Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Risk Title
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Owner
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Probability
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Impact
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Inherent Score
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Residual Score
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Status
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {risks.map((risk) => (
-              <tr key={risk.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <div>
-                    <p className="font-medium text-gray-900">{risk.title}</p>
-                    <p className="text-sm text-gray-600">{risk.description}</p>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{risk.owner}</td>
-                <td className="px-6 py-4 text-center">
-                  <span className="inline-block w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-bold">
-                    {risk.probability}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span className="inline-block w-8 h-8 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center text-sm font-bold">
-                    {risk.impact}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
-                      risk.inherentScore
-                    )}`}
-                  >
-                    {risk.inherentScore}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-bold">
-                    {risk.residualScore}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${
-                      risk.status === 'active'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}
-                  >
-                    {risk.status.charAt(0).toUpperCase() + risk.status.slice(1)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                    View
-                  </button>
-                </td>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+            <p className="text-gray-600 mt-2">Loading risks...</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Risk Title
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Owner
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Probability
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Impact
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Inherent Score
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Residual Score
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {filteredRisks.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-600">
+                    {searchQuery || statusFilter || severityFilter
+                      ? 'No risks match your filters'
+                      : 'No risks found'}
+                  </td>
+                </tr>
+              ) : (
+                filteredRisks.map((risk) => (
+                  <tr key={risk.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium text-gray-900">{risk.title}</p>
+                        <p className="text-sm text-gray-600">{risk.description}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{risk.owner}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-block w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-bold">
+                        {risk.probability}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-block w-8 h-8 bg-purple-100 text-purple-800 rounded-full flex items-center justify-center text-sm font-bold">
+                        {risk.impact}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span
+                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
+                          risk.inherentScore
+                        )}`}
+                      >
+                        {risk.inherentScore}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded text-sm font-bold">
+                        {risk.residualScore}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span
+                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${
+                          risk.status === 'active'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {risk.status.charAt(0).toUpperCase() + risk.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Summary Stats */}
@@ -223,9 +225,9 @@ export default function RisksPage() {
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Avg Residual Score</p>
           <p className="text-2xl font-bold text-green-600 mt-2">
-            {Math.round(
-              risks.reduce((sum, r) => sum + r.residualScore, 0) / risks.length
-            )}
+            {risks.length > 0
+              ? Math.round(risks.reduce((sum, r) => sum + r.residualScore, 0) / risks.length)
+              : 0}
           </p>
         </div>
       </div>

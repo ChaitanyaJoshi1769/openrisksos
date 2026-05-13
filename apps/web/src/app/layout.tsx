@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { ApiClientProvider } from '@/context/ApiClientProvider';
 
 export const metadata: Metadata = {
   title: 'OpenRiskOS - Enterprise Risk Management',
@@ -17,11 +18,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {/* TODO: Add providers for auth, React Query, etc. */}
-        <div className="min-h-screen bg-white">
-          {/* TODO: Add navigation/sidebar */}
-          {children}
-        </div>
+        <ApiClientProvider>
+          <div className="min-h-screen bg-white">
+            {/* TODO: Add navigation/sidebar */}
+            {children}
+          </div>
+        </ApiClientProvider>
       </body>
     </html>
   );
