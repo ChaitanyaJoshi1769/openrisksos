@@ -8,8 +8,10 @@ export { useUpdateIncident } from './useUpdateIncident';
 export { useCompliance } from './useCompliance';
 export { useAudits } from './useAudits';
 export { useAuditDetail } from './useAuditDetail';
+export { useUpdateAudit } from './useUpdateAudit';
 export { useVendors } from './useVendors';
 export { useVendorDetail } from './useVendorDetail';
+export { useUpdateVendor } from './useUpdateVendor';
 
 // Export types
 export type { RisksState } from './useRisks';

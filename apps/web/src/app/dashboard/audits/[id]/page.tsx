@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useAuditDetail } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import { CardSkeleton } from '@/components';
@@ -137,9 +138,9 @@ export default function AuditDetailPage({ params }: { params: { id: string } }) 
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition">
+          <Link href={`/dashboard/audits/${audit.id}/edit`} className="px-6 py-3 border border-gray-300 text-gray-900 rounded-lg hover:bg-gray-50 transition inline-block">
             Edit Audit
-          </button>
+          </Link>
           <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
             Add Finding
           </button>
