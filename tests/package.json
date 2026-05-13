@@ -1,0 +1,27 @@
+{
+  "name": "@openrisksos/tests",
+  "version": "0.1.0",
+  "description": "Integration and end-to-end tests for OpenRiskOS",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:api-gateway": "jest api-gateway.test.ts",
+    "test:risk-service": "jest risk-service.test.ts",
+    "test:e2e": "jest --runInBand"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.10.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
