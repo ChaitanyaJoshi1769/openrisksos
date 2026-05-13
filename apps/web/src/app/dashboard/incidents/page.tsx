@@ -1,56 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-
-interface Incident {
-  id: string;
-  title: string;
-  severity: string;
-  status: string;
-  detectedAt: string;
-  assignedTo: string;
-  affectedRecords: number;
-}
+import { useIncidents } from '@/hooks';
 
 export default function IncidentsPage() {
-  const [incidents] = useState<Incident[]>([
-    {
-      id: 'INC001',
-      title: 'Unauthorized Access Attempt',
-      severity: 'high',
-      status: 'investigating',
-      detectedAt: '2 hours ago',
-      assignedTo: 'Security Team',
-      affectedRecords: 0,
-    },
-    {
-      id: 'INC002',
-      title: 'Suspicious Login Activity',
-      severity: 'medium',
-      status: 'investigating',
-      detectedAt: '4 hours ago',
-      assignedTo: 'CISO',
-      affectedRecords: 1,
-    },
-    {
-      id: 'INC003',
-      title: 'Data Export Detected',
-      severity: 'high',
-      status: 'containment',
-      detectedAt: '1 day ago',
-      assignedTo: 'Incident Response',
-      affectedRecords: 250,
-    },
-    {
-      id: 'INC004',
-      title: 'Malware Detection',
-      severity: 'critical',
-      status: 'investigating',
-      detectedAt: '3 days ago',
-      assignedTo: 'Security Operations',
-      affectedRecords: 5,
-    },
-  ]);
+  const { data: incidents, loading, error } = useIncidents();
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -77,6 +30,34 @@ export default function IncidentsPage() {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (hours < 1) return 'Just now';
+      if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+      if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+      return date.toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-medium">Error loading incidents</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -109,89 +90,106 @@ export default function IncidentsPage() {
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Avg Resolution Time</p>
-          <p className="text-2xl font-bold text-blue-600 mt-2">4.2 hrs</p>
+          <p className="text-2xl font-bold text-blue-600 mt-2">
+            {incidents.length > 0 ? '4.2 hrs' : '—'}
+          </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">This Month</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">12</p>
+          <p className="text-gray-600 text-sm">Total Incidents</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{incidents.length}</p>
         </div>
       </div>
 
       {/* Incidents Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Incident
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Severity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Detected
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Assigned To
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Affected Records
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {incidents.map((incident) => (
-              <tr key={incident.id} className="hover:bg-gray-50 transition">
-                <td className="px-6 py-4">
-                  <p className="font-medium text-gray-900">{incident.title}</p>
-                  <p className="text-xs text-gray-600">{incident.id}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
-                      incident.severity
-                    )}`}
-                  >
-                    {incident.severity.toUpperCase()}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
-                      incident.status
-                    )}`}
-                  >
-                    {incident.status.toUpperCase()}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {incident.detectedAt}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {incident.assignedTo}
-                </td>
-                <td className="px-6 py-4 text-center text-sm text-gray-900 font-medium">
-                  {incident.affectedRecords > 0 ? (
-                    <span className="text-red-600">{incident.affectedRecords}</span>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                    View
-                  </button>
-                </td>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+            <p className="text-gray-600 mt-2">Loading incidents...</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Incident
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Severity
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Detected
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Assigned To
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Affected Records
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {incidents.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
+                    No incidents found
+                  </td>
+                </tr>
+              ) : (
+                incidents.map((incident) => (
+                  <tr key={incident.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">{incident.title}</p>
+                      <p className="text-xs text-gray-600">{incident.id}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${getSeverityColor(
+                          incident.severity
+                        )}`}
+                      >
+                        {incident.severity.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-block px-3 py-1 rounded text-sm font-bold ${getStatusColor(
+                          incident.status
+                        )}`}
+                      >
+                        {incident.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {formatDate(incident.createdAt || incident.detectedAt)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {incident.assignedTo || '—'}
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-900 font-medium">
+                      {incident.affectedRecords && incident.affectedRecords > 0 ? (
+                        <span className="text-red-600">{incident.affectedRecords}</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Investigation Workflow */}
