@@ -1,15 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/UserContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { isAuthenticated, login } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tenantId, setTenantId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +26,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Simulated authentication - in production, call actual API
+      // Validate inputs
       if (!email || !password || !tenantId) {
         throw new Error('Please fill in all fields');
       }
@@ -26,10 +35,13 @@ export default function LoginPage() {
         throw new Error('Invalid email format');
       }
 
-      // Store auth data
-      localStorage.setItem('authToken', 'mock-jwt-token-' + Date.now());
-      localStorage.setItem('tenantId', tenantId);
-      localStorage.setItem('userEmail', email);
+      // TODO: In production, make actual API call to authenticate
+      // For now, we'll generate a mock token and call the login method
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      localStorage.setItem('authToken', mockToken);
+
+      // Use the UserContext to store user data
+      login(email, tenantId);
 
       // Redirect to dashboard
       router.push('/dashboard');

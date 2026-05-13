@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUser } from '@/context/UserContext';
 
 export default function DashboardLayout({
   children,
@@ -10,13 +11,35 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { user, logout, isAuthenticated, loading } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, loading, router]);
+
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('tenantId');
+    logout();
     router.push('/login');
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -82,11 +105,12 @@ export default function DashboardLayout({
         <header className="bg-white shadow-sm px-8 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              {new Date().toLocaleDateString()}
-            </span>
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">{user?.email}</p>
+              <p className="text-xs text-gray-500">{user?.tenantId}</p>
+            </div>
             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-              U
+              {user?.email?.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
