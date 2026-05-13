@@ -1,92 +1,22 @@
 'use client';
 
-import { useState } from 'react';
-
-interface Vendor {
-  id: string;
-  name: string;
-  classification: string;
-  status: string;
-  riskScore: number;
-  lastAssessment: string;
-  assessmentType: string;
-  daysUntilReview: number;
-}
-
-interface VendorBreach {
-  id: string;
-  vendorId: string;
-  vendorName: string;
-  severity: string;
-  status: string;
-  reportedDate: string;
-  impact: string;
-}
+import { useVendors } from '@/hooks';
 
 export default function VendorsPage() {
-  const [vendors] = useState<Vendor[]>([
-    {
-      id: 'VEN001',
-      name: 'CloudSecure Inc.',
-      classification: 'critical',
-      status: 'active',
-      riskScore: 24,
-      lastAssessment: '2026-04-15',
-      assessmentType: 'SOC2 Report',
-      daysUntilReview: 45,
-    },
-    {
-      id: 'VEN002',
-      name: 'DataVault Solutions',
-      classification: 'high',
-      status: 'active',
-      riskScore: 35,
-      lastAssessment: '2026-03-20',
-      assessmentType: 'Security Questionnaire',
-      daysUntilReview: 92,
-    },
-    {
-      id: 'VEN003',
-      name: 'Network Infrastructure Ltd.',
-      classification: 'high',
-      status: 'under_review',
-      riskScore: 42,
-      lastAssessment: '2026-02-01',
-      assessmentType: 'Penetration Test',
-      daysUntilReview: 12,
-    },
-    {
-      id: 'VEN004',
-      name: 'BackupTech Services',
-      classification: 'medium',
-      status: 'active',
-      riskScore: 18,
-      lastAssessment: '2026-05-01',
-      assessmentType: 'Vulnerability Scan',
-      daysUntilReview: 180,
-    },
-  ]);
+  const { data: vendors, loading, error } = useVendors();
 
-  const [breaches] = useState<VendorBreach[]>([
-    {
-      id: 'BR001',
-      vendorId: 'VEN002',
-      vendorName: 'DataVault Solutions',
-      severity: 'high',
-      status: 'investigating',
-      reportedDate: '2026-05-05',
-      impact: '2,500 records exposed',
-    },
-    {
-      id: 'BR002',
-      vendorId: 'VEN003',
-      vendorName: 'Network Infrastructure Ltd.',
-      severity: 'critical',
-      status: 'contained',
-      reportedDate: '2026-04-28',
-      impact: '15,000 records exposed',
-    },
-  ]);
+  const breaches = vendors.flatMap((v: any) => v.breaches || []);
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-medium">Error loading vendors</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   const getClassificationColor = (classification: string) => {
     switch (classification) {
@@ -177,59 +107,72 @@ export default function VendorsPage() {
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Total Vendors</p>
           <p className="text-2xl font-bold text-blue-600 mt-2">
-            {vendors.length}
+            {loading ? '—' : vendors.length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Critical Risk</p>
           <p className="text-2xl font-bold text-red-600 mt-2">
-            {vendors.filter((v) => v.classification === 'critical').length}
+            {loading ? '—' : vendors.filter((v: any) => v.classification === 'critical').length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Under Review</p>
           <p className="text-2xl font-bold text-yellow-600 mt-2">
-            {vendors.filter((v) => v.status === 'under_review').length}
+            {loading ? '—' : vendors.filter((v: any) => v.status === 'under_review').length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Recent Breaches</p>
           <p className="text-2xl font-bold text-red-600 mt-2">
-            {breaches.length}
+            {loading ? '—' : breaches.length}
           </p>
         </div>
       </div>
 
       {/* Vendors Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Vendor
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Classification
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Status
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Risk Score
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Last Assessment
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Days to Review
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {vendors.map((vendor) => (
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+            <p className="text-gray-600 mt-2">Loading vendors...</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Vendor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Classification
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Risk Score
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Last Assessment
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Days to Review
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {vendors.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
+                    No vendors found
+                  </td>
+                </tr>
+              ) : (
+                vendors.map((vendor: any) => (
               <tr key={vendor.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
                   <p className="font-medium text-gray-900">{vendor.name}</p>
@@ -293,16 +236,25 @@ export default function VendorsPage() {
                   </button>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Vendor Breaches */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Breaches</h2>
         <div className="space-y-3">
-          {breaches.map((breach) => (
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+            </div>
+          ) : breaches.length === 0 ? (
+            <p className="text-gray-600 text-center py-4">No breaches reported</p>
+          ) : (
+            breaches.map((breach: any) => (
             <div
               key={breach.id}
               className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition"
@@ -333,7 +285,8 @@ export default function VendorsPage() {
                   .join(' ')}
               </span>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
