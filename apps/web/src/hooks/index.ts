@@ -5,6 +5,7 @@ export { useIncidents } from './useIncidents';
 export { useIncidentDetail } from './useIncidentDetail';
 export { useCompliance } from './useCompliance';
 export { useAudits } from './useAudits';
+export { useAuditDetail } from './useAuditDetail';
 export { useVendors } from './useVendors';
 
 // Export types

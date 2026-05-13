@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useAudits } from '@/hooks';
 
 export default function AuditsPage() {
@@ -238,9 +239,9 @@ export default function AuditsPage() {
                     {audit.owner}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                    <Link href={`/dashboard/audits/${audit.id}`} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                       View
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))
