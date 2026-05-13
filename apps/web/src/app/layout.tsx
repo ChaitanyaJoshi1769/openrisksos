@@ -3,6 +3,7 @@ import './globals.css';
 import { ApiClientProvider } from '@/context/ApiClientProvider';
 import { UserProvider } from '@/context/UserContext';
 import { QueryProvider } from '@/context/QueryClientProvider';
+import { ErrorBoundary } from '@/components';
 
 export const metadata: Metadata = {
   title: 'OpenRiskOS - Enterprise Risk Management',
@@ -20,16 +21,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <UserProvider>
-          <ApiClientProvider>
-            <QueryProvider>
-              <div className="min-h-screen bg-white">
-                {/* TODO: Add navigation/sidebar */}
-                {children}
-              </div>
-            </QueryProvider>
-          </ApiClientProvider>
-        </UserProvider>
+        <ErrorBoundary>
+          <UserProvider>
+            <ApiClientProvider>
+              <QueryProvider>
+                <div className="min-h-screen bg-white">
+                  {/* TODO: Add navigation/sidebar */}
+                  {children}
+                </div>
+              </QueryProvider>
+            </ApiClientProvider>
+          </UserProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
