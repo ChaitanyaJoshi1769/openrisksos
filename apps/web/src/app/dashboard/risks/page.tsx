@@ -62,9 +62,9 @@ export default function RisksPage() {
             {risks.length} risks identified and tracked
           </p>
         </div>
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <Link href="/dashboard/risks/new" className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block">
           + New Risk
-        </button>
+        </Link>
       </div>
 
       {/* Filters */}

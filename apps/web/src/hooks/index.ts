@@ -1,6 +1,7 @@
 export { useApiClient } from './useApiClient';
 export { useRisks } from './useRisks';
 export { useRiskDetail } from './useRiskDetail';
+export { useCreateRisk } from './useCreateRisk';
 export { useUpdateRisk } from './useUpdateRisk';
 export { useIncidents } from './useIncidents';
 export { useIncidentDetail } from './useIncidentDetail';
