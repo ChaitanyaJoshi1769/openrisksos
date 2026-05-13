@@ -1,110 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-
-interface Audit {
-  id: string;
-  type: string;
-  title: string;
-  status: string;
-  scheduledDate: string;
-  owner: string;
-  scope: string;
-  findingsCount: number;
-  criticalFindings: number;
-}
-
-interface Finding {
-  id: string;
-  auditId: string;
-  title: string;
-  severity: string;
-  status: string;
-  dueDate: string;
-}
+import { useAudits } from '@/hooks';
 
 export default function AuditsPage() {
-  const [audits] = useState<Audit[]>([
-    {
-      id: 'AUD001',
-      type: 'Internal',
-      title: 'Annual Information Security Audit',
-      status: 'in_progress',
-      scheduledDate: '2026-05-01',
-      owner: 'Compliance Team',
-      scope: 'Infrastructure & Systems',
-      findingsCount: 8,
-      criticalFindings: 2,
-    },
-    {
-      id: 'AUD002',
-      type: 'External',
-      title: 'SOC 2 Type II Audit',
-      status: 'draft_report',
-      scheduledDate: '2026-04-15',
-      owner: 'External Auditor',
-      scope: 'Security, Availability, Integrity',
-      findingsCount: 5,
-      criticalFindings: 1,
-    },
-    {
-      id: 'AUD003',
-      type: 'Compliance',
-      title: 'GDPR Compliance Review',
-      status: 'scheduled',
-      scheduledDate: '2026-06-01',
-      owner: 'Data Privacy Officer',
-      scope: 'Data Processing & Protection',
-      findingsCount: 0,
-      criticalFindings: 0,
-    },
-    {
-      id: 'AUD004',
-      type: 'IT',
-      title: 'System Infrastructure Review',
-      status: 'closed',
-      scheduledDate: '2026-03-01',
-      owner: 'IT Manager',
-      scope: 'Hardware & Network',
-      findingsCount: 12,
-      criticalFindings: 3,
-    },
-  ]);
+  const { data: audits, loading, error } = useAudits();
 
-  const [findings] = useState<Finding[]>([
-    {
-      id: 'F001',
-      auditId: 'AUD001',
-      title: 'Lack of MFA on Admin Accounts',
-      severity: 'critical',
-      status: 'open',
-      dueDate: '2026-06-15',
-    },
-    {
-      id: 'F002',
-      auditId: 'AUD001',
-      title: 'Insufficient Encryption Standards',
-      severity: 'major',
-      status: 'in_remediation',
-      dueDate: '2026-07-01',
-    },
-    {
-      id: 'F003',
-      auditId: 'AUD002',
-      title: 'Inadequate Backup Testing',
-      severity: 'major',
-      status: 'open',
-      dueDate: '2026-06-30',
-    },
-    {
-      id: 'F004',
-      auditId: 'AUD004',
-      title: 'Outdated SSL Certificates',
-      severity: 'critical',
-      status: 'remediated',
-      dueDate: '2026-04-15',
-    },
-  ]);
+  const findings = audits.flatMap((a: any) => a.findings || []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -178,6 +79,17 @@ export default function AuditsPage() {
     }
   };
 
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800 font-medium">Error loading audits</p>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -198,57 +110,70 @@ export default function AuditsPage() {
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Total Audits</p>
           <p className="text-2xl font-bold text-blue-600 mt-2">
-            {audits.length}
+            {loading ? '—' : audits.length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">In Progress</p>
           <p className="text-2xl font-bold text-yellow-600 mt-2">
-            {audits.filter((a) => a.status === 'in_progress').length}
+            {loading ? '—' : audits.filter((a: any) => a.status === 'in_progress').length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Open Findings</p>
           <p className="text-2xl font-bold text-red-600 mt-2">
-            {findings.filter((f) => f.status === 'open').length}
+            {loading ? '—' : findings.filter((f: any) => f.status === 'open').length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <p className="text-gray-600 text-sm">Avg Closure Time</p>
-          <p className="text-2xl font-bold text-green-600 mt-2">45 days</p>
+          <p className="text-2xl font-bold text-green-600 mt-2">{loading ? '—' : '45 days'}</p>
         </div>
       </div>
 
       {/* Audits Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Audit
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Type
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Scheduled Date
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Findings
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
-                Owner
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {audits.map((audit) => (
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+            <p className="text-gray-600 mt-2">Loading audits...</p>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Audit
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Scheduled Date
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Findings
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-900">
+                  Owner
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-900">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {audits.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-600">
+                    No audits found
+                  </td>
+                </tr>
+              ) : (
+                audits.map((audit: any) => (
               <tr key={audit.id} className="hover:bg-gray-50 transition">
                 <td className="px-6 py-4">
                   <p className="font-medium text-gray-900">{audit.title}</p>
@@ -299,18 +224,27 @@ export default function AuditsPage() {
                   </button>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Findings Summary */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Open Findings</h2>
         <div className="space-y-3">
-          {findings
-            .filter((f) => f.status === 'open' || f.status === 'in_remediation')
-            .map((finding) => (
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+            </div>
+          ) : findings.length === 0 ? (
+            <p className="text-gray-600 text-center py-4">No open findings</p>
+          ) : (
+            findings
+              .filter((f: any) => f.status === 'open' || f.status === 'in_remediation')
+              .map((finding: any) => (
               <div
                 key={finding.id}
                 className="flex items-center justify-between p-4 bg-gray-50 rounded border border-gray-200 hover:border-gray-300 transition"
@@ -341,7 +275,8 @@ export default function AuditsPage() {
                     .join(' ')}
                 </span>
               </div>
-            ))}
+              ))
+          )}
         </div>
       </div>
 
